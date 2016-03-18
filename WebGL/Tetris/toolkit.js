@@ -25,6 +25,43 @@ mat4.identity = function(){
 	}
 	return matrix;
 };
+mat4.setIdentity = function(matrix){
+	matrix[0] = 1;
+	matrix[1] = 0;
+	matrix[2] = 0;
+	matrix[3] = 0;
+	matrix[4] = 0;
+	matrix[5] = 1;
+	matrix[6] = 0;
+	matrix[7] = 0;
+	matrix[8] = 0;
+	matrix[9] = 0;
+	matrix[10] = 1;
+	matrix[11] = 0;
+	matrix[12] = 0;
+	matrix[13] = 0;
+	matrix[14] = 0;
+	matrix[15] = 1;
+};
+mat4.transpose = function(matrix){
+	var a01 = matrix[1], a02 = matrix[2], a03 = matrix[3],
+		a12 = matrix[6], a13 = matrix[7],
+		a23 = matrix[11];
+
+	matrix[1] = matrix[4];
+	matrix[2] = matrix[8];
+	matrix[3] = matrix[12];
+	matrix[4] = a01;
+	matrix[6] = matrix[9];
+	matrix[7] = matrix[13];
+	matrix[8] = a02;
+	matrix[9] = a12;
+	matrix[11] = matrix[14];
+	matrix[12] = a03;
+	matrix[13] = a13;
+	matrix[14] = a23;
+	return matrix;
+};
 mat4.scaleX = function(matrix, scale){
 	matrix[0] *= scale;
 };
@@ -38,42 +75,6 @@ mat4.scale = function(matrix, scales){
 	matrix[0] *= scale[0];
 	matrix[5] *= scale[1];
 	matrix[10] *= scale[2];
-};
-mat4.rotateX = function(matrix, angle){
-	var cos = Math.cos(toRadians(angle));
-	var sin = Math.sin(toRadians(angle));
-	var m1 = matrix[1], m5 = matrix[5], m9 = matrix[9];
-	matrix[1] = matrix[1]*cos - matrix[2]*sin;
-    matrix[5] = matrix[5]*cos - matrix[6]*sin;
-    matrix[9] = matrix[9]*cos - matrix[10]*sin;
-
-    matrix[2] = matrix[2]*cos + m1*sin;
-    matrix[6] = matrix[6]*cos + m5*sin;
-    matrix[10] = matrix[10]*cos + m9*sin;
-};
-mat4.rotateY = function(matrix, angle){
-	var cos = Math.cos(toRadians(angle));
-	var sin = Math.sin(toRadians(angle));
-	var m0 = matrix[0], m4 = matrix[4], m8 = matrix[8];
-	matrix[0]= matrix[0]*cos + matrix[2]*sin;
-    matrix[4]= matrix[4]*cos + matrix[6]*sin;
-    matrix[8]= matrix[8]*cos + matrix[10]*sin;
-
-    matrix[2]= matrix[2]*cos - m0*sin;
-    matrix[6]= matrix[6]*cos - m4*sin;
-    matrix[10]= matrix[10]*cos - m8*sin;
-};
-mat4.rotateZ = function(matrix, angle){
-	var cos = Math.cos(toRadians(angle));
-	var sin = Math.sin(toRadians(angle));
-	var m0 = matrix[0], m4 = matrix[4], m8 = matrix[8];
-	matrix[0]= matrix[0]*cos - matrix[1]*sin;
-    matrix[4]= matrix[4]*cos - matrix[5]*sin;
-    matrix[8]= matrix[8]*cos - matrix[9]*sin;
-
-    matrix[1]= matrix[1]*cos + m0*sin;
-    matrix[5]= matrix[5]*cos + m4*sin;
-    matrix[9]= matrix[9]*cos + m8*sin;
 };
 mat4.translateX = function(matrix, translation){
 	matrix[12] += translation;
@@ -91,13 +92,13 @@ mat4.position = function(matrix, position){
 };
 mat4.perspective = function(FOV, aspectRatio, nearPlane, farPlane){
 	var matrix = mat4.identity();
-	var scale = (1.0 / Math.tan(toRadians(FOV / 2.0)));
-	var frustumLength = (farPlane - nearPlane);
-	matrix[0] = scale/aspectRatio;// X Scale
-	matrix[5] = scale;// Y Scale
-	matrix[10] = -((farPlane + nearPlane) / frustumLength);
+	var xyScale = 1.0 / Math.tan(toRadians(FOV)/2.0);
+	var frustumLength = 1.0 / (nearPlane - farPlane);
+	matrix[0] = xyScale / aspectRatio;
+	matrix[5] = xyScale;
+	matrix[10] = (farPlane + nearPlane) * frustumLength;
 	matrix[11] = -1;
-	matrix[14] = -((2*farPlane*nearPlane) / frustumLength);
+	matrix[14] = (2 * farPlane * nearPlane) * frustumLength;
 	matrix[15] = 0;
 	return matrix;
 };
@@ -112,7 +113,7 @@ mat4.string = function(matrix){
 	}
 	return output;
 };
-mat4.glRotateX = function(matrix, angle){
+mat4.rotateX = function(matrix, angle){
 	var cos = Math.cos(toRadians(angle)),
 		sin = Math.sin(toRadians(angle)),
 		a10 = matrix[4],
@@ -133,7 +134,7 @@ mat4.glRotateX = function(matrix, angle){
 	matrix[10] = a22 * cos - a12 * sin;
 	matrix[11] = a23 * cos - a13 * sin;
 };
-mat4.glRotateY = function(matrix, angle){
+mat4.rotateY = function(matrix, angle){
 	var cos = Math.cos(toRadians(angle)),
 		sin = Math.sin(toRadians(angle)),
 		a00 = matrix[0],
@@ -174,4 +175,28 @@ mat4.rotateZ = function(matrix, angle){
 	matrix[5] = a11 * cos - a01 * sin;
 	matrix[6] = a12 * cos - a02 * sin;
 	matrix[7] = a13 * cos - a03 * sin;
+};
+mat4.translateX = function(matrix, x){
+	matrix[12] = matrix[0] * x + matrix[12];
+	matrix[13] = matrix[1] * x + matrix[13];
+	matrix[14] = matrix[2] * x + matrix[14];
+	matrix[15] = matrix[3] * x + matrix[15];
+};
+mat4.translateY = function(matrix, y){
+	matrix[12] = matrix[4] * y + matrix[12];
+	matrix[13] = matrix[5] * y + matrix[13];
+	matrix[14] = matrix[6] * y + matrix[14];
+	matrix[15] = matrix[7] * y + matrix[15];
+};
+mat4.translateZ = function(matrix, z){
+	matrix[12] = matrix[8] * z + matrix[12];
+	matrix[13] = matrix[9] * z + matrix[13];
+	matrix[14] = matrix[10] * z + matrix[14];
+	matrix[15] = matrix[11] * z + matrix[15];
+};
+mat4.translateVector = function(matrix, vector){
+	matrix[12] = matrix[0] * vector[0] + matrix[4] * vector[1] + matrix[8] * vector[2] + matrix[12];
+	matrix[13] = matrix[1] * vector[0] + matrix[5] * vector[1] + matrix[9] * vector[2] + matrix[13];
+	matrix[14] = matrix[2] * vector[0] + matrix[6] * vector[1] + matrix[10] * vector[2] + matrix[14];
+	matrix[15] = matrix[3] * vector[0] + matrix[7] * vector[1] + matrix[11] * vector[2] + matrix[15];
 };

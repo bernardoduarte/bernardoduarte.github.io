@@ -84,6 +84,31 @@
 				}
 			};
 
+			window.ontouchstart = function(event){
+				drag = true;
+				oldX = event.pageX, oldY = event.pageY;
+				event.preventDefault();
+				// return false;
+			};
+
+			window.ontouchend = function(event){
+				drag = false;
+			};
+
+			window.ontouchmove = function(event){
+				if(!drag){
+					return false;
+				}else{
+					deltaX = (event.pageX - oldX)*200*Math.PI/mygl.canvas.width;
+					deltaY = (event.pageY - oldY)*200*Math.PI/mygl.canvas.height;
+					THETA += deltaX;
+					PHI += deltaY;
+					oldX = event.pageX;
+					oldY = event.pageY;
+					event.preventDefault();
+				}
+			};
+
 			mygl.canvas.addEventListener("mousedown", mouseDown, false);
 			mygl.canvas.addEventListener("mouseup", mouseUp, false);
 			mygl.canvas.addEventListener("mouseout", mouseUp, false);
@@ -100,7 +125,7 @@
 
 			var colors = [
 				1,0,1, 1,0,1, 1,0,1, 1,0,1,
-				1,1,1, 1,1,1, 1,1,1, 1,1,1,
+				0,1,1, 0,1,1, 0,1,1, 0,1,1,
 				0,0,1, 0,0,1, 0,0,1, 0,0,1,
 				1,0,0, 1,0,0, 1,0,0, 1,0,0,
 				1,1,0, 1,1,0, 1,1,0, 1,1,0,
@@ -122,10 +147,10 @@
 			mygl.associate(VBO, IBO, "aCoordinate");
 			mygl.associate(CBO, 'undefined', "aColor");
 
-			var pMatrix = mat4.perspective(70, mygl.viewportWidth/mygl.viewportHeight, 0.1, 100);
+			var pMatrix = mat4.perspective(40, mygl.viewportWidth/mygl.viewportHeight, 0.1, 1000);
 			var vMatrix = mat4.identity();
 			var mMatrix = mat4.identity();
-			mat4.translateZ(vMatrix, 0);
+			mat4.translateZ(vMatrix, -6);
 
 			var perspective = gl.getUniformLocation(myShaderProgram.program, "perspective");
 			gl.uniformMatrix4fv(perspective, false, pMatrix);
@@ -148,11 +173,11 @@
 					THETA += deltaX, PHI += deltaY;
 				}
 				mMatrix = mat4.identity();
-				mat4.translateZ(mMatrix, transZ);
-				mat4.translateX(mMatrix, transX);
-				mat4.glRotateY(mMatrix, THETA);
-				mat4.glRotateX(mMatrix, PHI);
-				vMatrix = mat4.identity();
+				mat4.translateVector(mMatrix,[transX, 0, transZ]);
+				mat4.rotateY(mMatrix, THETA);
+				mat4.rotateX(mMatrix, PHI);
+				// mat4.translateX(mMatrix, transX);
+				// mat4.translateZ(mMatrix, transZ);
 
 				gl.uniformMatrix4fv(view, false, vMatrix);
 				gl.uniformMatrix4fv(model, false, mMatrix);
